@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "nilest-test"
+  annotations:
+    github.com/project-slug: samgabrail/aws-eks
+    # github.com/project-slug: samgabrail/nilest-test
+  description: nilest-test running on AWS EKS cluster managed by Terraform
+spec:
+  type: service
+  owner: user:guest
+  lifecycle: experimental

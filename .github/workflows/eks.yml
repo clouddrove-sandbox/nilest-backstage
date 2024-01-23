@@ -1,0 +1,71 @@
+name: 'EKS Automation'
+permissions: write-all
+on: 
+  workflow_dispatch:
+    inputs:
+      region:
+        description: 'Region of EKS Cluster'
+        required: true
+        default: 'us-east-1'
+        type: choice
+        options:
+        - us-east-1
+        - us-east-2
+        - us-west-1
+        - us-west-2
+        - ap-south-1
+        - ap-northeast-3
+      env:
+        description: 'Environment of EKS Cluster'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - prod
+        - sandbox
+        - staging
+      clusterName:
+        description: 'Name of the EKS cluster'
+        required: true
+      key_id:
+        description: 'key id for aws authentication'
+        required: true
+      secret_key:
+        description: 'secret key of aws authentication'
+        required: true
+
+jobs:
+  # Job for EKS spin-up
+  spin-up:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ github.event.inputs.key_id }}
+          aws-secret-access-key: ${{ github.event.inputs.secret_key }}
+          aws-region: ${{ github.event.inputs.region }}
+
+      # Install the latest version of the Terraform CLI
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+          terraform_version: 1.5.6
+
+      # Initialization
+      - name: 'Terraform initialization'
+        id: init
+        working-directory: terraform/aws/eks
+        run: |
+          terraform init
+
+      # Terraform Apply
+      - name: Terraform Apply
+        id: apply
+        working-directory: terraform/aws/eks
+        run: |
+          terraform apply --auto-approve -var region=${{ github.event.inputs.region }} -var clusterName=${{ github.event.inputs.clusterName }} -var env=${{ github.event.inputs.env }}
